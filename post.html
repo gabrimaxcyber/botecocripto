@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- OG tags estáticas (WhatsApp/Telegram preview) -->
+  <title>Boteco Cripto</title>
+  <meta property="og:title" content="Boteco Cripto" />
+  <meta property="og:description" content="Comunidade brasileira de traders e investidores em criptomoedas." />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Boteco Cripto" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Boteco Cripto" />
+  <meta name="twitter:description" content="Comunidade brasileira de traders e investidores em criptomoedas." />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0f; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #111118; border-radius: 24px; padding: 28px 24px;
+      max-width: 400px; width: 100%; border: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+    }
+    .logo { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .logo span { color: #1a6ef5; }
+    .badge {
+      display: inline-block; background: rgba(26,110,245,0.15);
+      color: #1a6ef5; font-size: 12px; font-weight: 700;
+      border-radius: 100px; padding: 4px 12px; margin-bottom: 20px;
+      border: 1px solid rgba(26,110,245,0.3);
+    }
+    .post-box {
+      background: #1a1a24; border-radius: 16px; padding: 16px;
+      text-align: left; margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,0.06); min-height: 80px;
+    }
+    .author { font-size: 13px; font-weight: 700; color: #1a6ef5; margin-bottom: 8px; }
+    .content { font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; }
+    .post-img { width: 100%; border-radius: 10px; margin-top: 12px; display: none; }
+    .skeleton {
+      background: rgba(255,255,255,0.06); border-radius: 6px; height: 14px; margin-bottom: 8px;
+      animation: pulse 1.5s infinite;
+    }
+    .skeleton.short { width: 40%; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .btn-primary {
+      display: block; width: 100%;
+      background: #1a6ef5; color: #fff; text-decoration: none;
+      border-radius: 14px; padding: 16px; font-weight: 700; font-size: 16px;
+      margin-bottom: 12px; cursor: pointer; border: none;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:active { opacity: 0.8; }
+    .btn-secondary {
+      display: block; width: 100%;
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
+      text-decoration: none; border-radius: 14px; padding: 14px;
+      font-weight: 600; font-size: 14px; border: 1px solid rgba(255,255,255,0.08);
+      transition: opacity 0.2s;
+    }
+    .btn-secondary:active { opacity: 0.8; }
+    .hint { font-size: 12px; color: rgba(255,255,255,0.25); margin-top: 14px; }
+    .error { color: rgba(255,77,77,0.8); font-size: 13px; text-align: center; padding: 16px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Boteco <span>Cripto</span></div>
+    <div class="badge">Comunidade Cripto</div>
+
+    <div class="post-box" id="post-box">
+      <div class="skeleton short"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton" style="width:70%"></div>
+    </div>
+
+    <button class="btn-primary" id="btn-open" onclick="openApp()">📲 Abrir no app</button>
+    <a class="btn-secondary" href="https://apps.apple.com/app/id6784417933">⬇️ Baixar o Boteco Cripto</a>
+    <p class="hint">Disponível para iPhone na App Store</p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://nuhfmdutokrmukwbdnrt.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51aGZtZHV0b2tybXVrd2JkbnJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Nzg5MTYsImV4cCI6MjA4ODI1NDkxNn0.Z37WQLHax3WBaeeJe1rUyuIrhej0wTM9KqsZObtu4_s';
+
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get('id');
+
+    async function loadPost() {
+      if (!postId) {
+        document.getElementById('post-box').innerHTML = '<p class="error">Post não encontrado.</p>';
+        return;
+      }
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}&select=content,image_url,profiles(full_name)`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
+        );
+        const data = await res.json();
+        const post = data[0];
+        if (!post) throw new Error('not found');
+
+        const author = post.profiles?.full_name || 'Boteco Cripto';
+        const content = (post.content || '').slice(0, 300);
+        const img = post.image_url || '';
+
+        document.getElementById('post-box').innerHTML = `
+          <div class="author">${escHtml(author)}</div>
+          <div class="content">${escHtml(content)}${post.content?.length > 300 ? '...' : ''}</div>
+          ${img ? `<img class="post-img" src="${escHtml(img)}" style="display:block" />` : ''}
+        `;
+      } catch (e) {
+        document.getElementById('post-box').innerHTML = '<p class="error">Não foi possível carregar o post.</p>';
+      }
+    }
+
+    function openApp() {
+      window.location.href = `botecocripto://post/${postId}`;
+      setTimeout(function () {
+        window.location.href = 'https://apps.apple.com/app/id6784417933';
+      }, 2000);
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    loadPost();
+  </script>
+</body>
+</html>
